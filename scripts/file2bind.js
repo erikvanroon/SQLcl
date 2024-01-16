@@ -95,10 +95,21 @@ function scriptCode () {
     utl.runStmnt (concatenationStmnt);
   }
 
+  // Function returns the supplied character escaped if it is a character that needs to be escaped
+  // otherwise it returns the supplied character unchanged
+  function escaped_if_needed (charToEscape) {
+    var result = charToEscape;
+    if (result == "'") {
+      result = result + result;
+    }
+    return result;
+  }
+
   // Function reads the file and puts data in the bind variables
   function readFileToBind (nameOfFile, bindContents, bindPathname) {
     // Declare variables
-    const bufferSize   = 32767;                            // Maximum number of bytes to be appended to the clob at a time
+    const bufferSize   = 32766;                            // Maximum number of bytes to be appended to the clob at a time
+                                                           // One less than max cvarchar2 size because in case of quote we add it escaped, so 2 char's at once
     var   fileReader   = Java.type('java.io.FileReader');  // Declare JavaScript variable referencing the FileReader Java class
     var   lineContents = '';                               // buffer (string of characters) to be appended to the bindvariable
     var   char;                                            // Current character to be processed
@@ -122,8 +133,8 @@ function scriptCode () {
     // Loop until all characters in the file have been processed
     char        = clientFile.read();   // Get first character from file
     while (char !== -1) {
-      // Add the character to the character-buffer
-      lineContents = lineContents + String.fromCharCode(char);
+      // Add the character to the character-buffer, if it's a quote, escape it
+      lineContents = lineContents + escaped_if_needed(String.fromCharCode(char));
 
       // Read the next character from the file
       char = clientFile.read();
